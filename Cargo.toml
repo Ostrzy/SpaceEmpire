@@ -1,0 +1,5 @@
+[package]
+
+name = "SpaceEmpire"
+version = "0.0.1"
+authors = ["Michał Simka <uslugi@ostrzy.net>"]
