@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+mod graphics;
 
 #[derive(Clone, Show)]
 struct Resources {
@@ -212,4 +213,6 @@ fn main() {
   fleet1.merge(Box::new(fleet2));
   let mut fleet3 = Fleet::new(&player);
   assert!(fleet1.move_to(&mut fleet3, 3, ShipClass::Fighter).is_ok());
+  
+  graphics::example()
 }

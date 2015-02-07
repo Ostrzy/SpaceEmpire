@@ -1,4 +1,45 @@
 [root]
 name = "SpaceEmpire"
 version = "0.0.1"
+dependencies = [
+ "sdl2 0.0.21 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sdl2_ttf 0.0.3 (git+https://github.com/andelf/rust-sdl2_ttf)",
+]
+
+[[package]]
+name = "bitflags"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "pkg-config"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "sdl2"
+version = "0.0.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sdl2-sys 0.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "sdl2-sys"
+version = "0.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "pkg-config 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "sdl2_ttf"
+version = "0.0.3"
+source = "git+https://github.com/andelf/rust-sdl2_ttf#4c974a7b1fb15c59de94bb1776eaa1cae2601ec8"
+dependencies = [
+ "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sdl2 0.0.21 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sdl2-sys 0.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 

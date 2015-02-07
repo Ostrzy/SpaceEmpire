@@ -3,3 +3,9 @@
 name = "SpaceEmpire"
 version = "0.0.1"
 authors = ["Michał Simka <uslugi@ostrzy.net>"]
+
+[dependencies]
+sdl2 = "0.0.21"
+
+[dependencies.sdl2_ttf]
+git = "https://github.com/andelf/rust-sdl2_ttf"
