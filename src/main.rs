@@ -179,6 +179,7 @@ impl<'a> Starmap<'a> {
 
         for neighbour in neighbours.iter() {
             starmap.neighbours.insert((SolarSystemId(neighbour.0), SolarSystemId(neighbour.1)));
+            starmap.neighbours.insert((SolarSystemId(neighbour.1), SolarSystemId(neighbour.0)));
         }
         
         starmap
