@@ -141,7 +141,8 @@ struct SolarSystemId(pub u32);
 struct SolarSystem<'a> {
     building: Option<Building>,
     owner: Option<&'a Player>,
-    fleet: Option<Fleet<'a>>
+    fleet: Option<Fleet<'a>>,
+    location: (u32, u32)
 }
 
 struct Starmap<'a> {
@@ -151,7 +152,7 @@ struct Starmap<'a> {
 
 impl<'a> SolarSystem<'a> {
     fn new() -> SolarSystem<'a> {
-        SolarSystem { building: None, owner: None, fleet: None }
+        SolarSystem { building: None, owner: None, fleet: None, location: (0, 0) }
     }
 }
 
@@ -175,7 +176,9 @@ impl<'a> Starmap<'a> {
         let mut starmap = Starmap::new();
         
         for n in 0..9 {
-            starmap.systems.insert(SolarSystemId(n), SolarSystem::new());
+            let mut system = SolarSystem::new();
+            system.location = (n % 3, n / 3);
+            starmap.systems.insert(SolarSystemId(n), system);
         }
 
         for neighbour in neighbours.iter() {
@@ -186,8 +189,6 @@ impl<'a> Starmap<'a> {
         starmap
     }
 }
-
-
 
 fn main() {
   // Buildings
