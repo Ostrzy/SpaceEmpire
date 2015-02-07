@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
+
 
 #[derive(Clone, Show)]
 struct Resources {
@@ -132,50 +134,56 @@ struct Player {
   num: u32
 }
 
+#[derive(Eq, PartialEq, Hash)]
+struct SolarSystemId(pub u32);
+
 struct SolarSystem<'a> {
-  neighbours: Vec<&'a SolarSystem<'a>>,
-  building: Option<Building>,
-  owner: Option<&'a Player>,
-  fleet: Option<Fleet<'a>>
+    building: Option<Building>,
+    owner: Option<&'a Player>,
+    fleet: Option<Fleet<'a>>
+}
+
+struct Starmap<'a> {
+    systems: HashMap<SolarSystemId, SolarSystem<'a>>,
+    neighbours: HashSet<(SolarSystemId, SolarSystemId)>
 }
 
 impl<'a> SolarSystem<'a> {
-  fn new() -> SolarSystem<'a> {
-    SolarSystem { neighbours: Vec::new(), building: None, owner: None, fleet: None }
-  }
-
-  fn generate_universe() -> Box<Vec<SolarSystem<'a>>> {
-    let mut systems = Box::new(Vec::with_capacity(9));
-    for _ in 0..9 {
-      systems.push(SolarSystem::new());
+    fn new() -> SolarSystem<'a> {
+        SolarSystem { building: None, owner: None, fleet: None }
     }
-
-    // 0 - 1 - 2
-    // |     / |
-    // 3   4   5
-    // | /     |
-    // 6 - 7 - 8
-    let neighbours = [
-      [1,3], [0,2], [1,5],
-      [0,6], [2,6], [2,8],
-      [3,7], [6,8], [7,5]
-    ];
-
-
-    for num in range(0, 9) {
-      let ns: [usize; 2] = neighbours[num];
-      for neighbour in ns.iter() {
-        let mut current_system: &mut SolarSystem   = systems.get_mut(num).unwrap();
-        let neighbour_system: &SolarSystem = systems.get(*neighbour).unwrap();
-        let mut neighbours: &mut Vec<&SolarSystem> = &mut current_system.neighbours;
-        neighbours.push(neighbour_system);
-      }
-    }
-
-    systems
-  }
 }
 
+impl<'a> Starmap<'a> {
+    fn new() -> Starmap<'a> {
+        Starmap { systems: HashMap::new(), neighbours: HashSet::new() }
+    }
+
+    fn generate_universe() -> Starmap<'a> {
+        // 0 - 1 - 2
+        // |     / |
+        // 3   4   5
+        // | /     |
+        // 6 - 7 - 8
+        let neighbours = [
+            (1,3), (0,2), (1,5),
+            (0,6), (2,6), (2,8),
+            (3,7), (6,8), (7,5)
+        ];
+    
+        let mut starmap = Starmap::new();
+        
+        for n in 0..9 {
+            starmap.systems.insert(SolarSystemId(n), SolarSystem::new());
+        }
+
+        for neighbour in neighbours.iter() {
+            starmap.neighbours.insert((SolarSystemId(neighbour.0), SolarSystemId(neighbour.1)));
+        }
+        
+        starmap
+    }
+}
 
 
 
