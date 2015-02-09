@@ -149,36 +149,36 @@ impl<'a> Fleet<'a> {
   }
 }
 
+#[derive(Eq, PartialEq, Hash, Copy)]
+struct PlayerId(pub u32);
+
 struct Player {
-  num: u32,
+  id: PlayerId,
   resources: Resources
 }
 
 impl PartialEq for Player {
   fn eq(&self, other : &Player) -> bool {
-    self.num == other.num
+    self.id == other.id
   }
 }
 
 impl Player {
   fn gather_resources(&mut self, stars: &Starmap) -> () {
-    self.resources = self.resources.clone() +
-      stars.systems.values()
-        .filter(|s| match s.owner {
-            Some(o) => self.num == o,
-            None => false
-          })
-        .filter_map(|s| s.building.as_ref().map(|b| b.production.clone()))
-        .fold(Resources::new(), |r, p| r + p );
+    let id = self.id;
+    let owned_systems = stars.systems.values().filter(|s| s.owner == Some(id));
+    let owned_buildings = owned_systems.filter_map(|s| s.building.as_ref());
+    let owned_production = owned_buildings.map(|b| b.production.clone());
+    self.resources = owned_production.fold(self.resources.clone(), |r, p| r + p );
   }
 }
 
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, Copy)]
 struct SolarSystemId(pub u32);
 
 struct SolarSystem<'a> {
     building: Option<Building>,
-    owner: Option<u32>,
+    owner: Option<PlayerId>,
     fleet: Option<Fleet<'a>>,
     location: (u32, u32)
 }
@@ -229,16 +229,16 @@ impl<'a> Starmap<'a> {
 }
 
 fn test_gathering_resources() {
-  let mut player = Player{ num: 1, resources: Resources::new() };
+  let mut player = Player{ id: PlayerId(1), resources: Resources::new() };
   let mut universe = Starmap::generate_universe();
   
   player.gather_resources(&universe);
   assert!(player.resources==Resources::new());
   
   universe.systems[SolarSystemId(0)].building=Some(Building::new(BuildingClass::Farm));
-  universe.systems[SolarSystemId(0)].owner=Some(1);
+  universe.systems[SolarSystemId(0)].owner=Some(PlayerId(1));
   universe.systems[SolarSystemId(1)].building=Some(Building::new(BuildingClass::Farm));
-  universe.systems[SolarSystemId(1)].owner=Some(2);
+  universe.systems[SolarSystemId(1)].owner=Some(PlayerId(2));
   player.gather_resources(&universe);
   assert!(player.resources==Resources { gold: 0, food: 5, technology: 0});
 }
@@ -252,7 +252,7 @@ fn main() {
   println!("{:?}", lab);
   println!("{:?}", mine);
 
-  let player = Player{ num: 1, resources: Resources::new() };
+  let player = Player{ id: PlayerId(1), resources: Resources::new() };
 
   // Fleets
   let mut fleet1 = Fleet::new(&player);
