@@ -1,13 +1,31 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::ops::Add;
 
 mod graphics;
 
-#[derive(Clone, Show)]
+#[derive(Clone, Show, PartialEq, Eq)]
 struct Resources {
   food: i32,
   technology: i32,
   gold: i32
+}
+
+impl Add for Resources {
+  type Output = Resources;
+  fn add(self, other:Resources) -> Resources {
+    Resources {
+      food:       self.food + other.food,
+      technology: self.technology + other.technology,
+      gold:       self.gold + other.gold
+    }
+  }
+}
+
+impl Resources {
+  fn new() -> Resources {
+    Resources{food: 0, technology: 0, gold: 0}
+  }
 }
 
 #[derive(Show)]
@@ -132,7 +150,27 @@ impl<'a> Fleet<'a> {
 }
 
 struct Player {
-  num: u32
+  num: u32,
+  resources: Resources
+}
+
+impl PartialEq for Player {
+  fn eq(&self, other : &Player) -> bool {
+    self.num == other.num
+  }
+}
+
+impl Player {
+  fn gather_resources(&mut self, stars: &Starmap) -> () {
+    self.resources = self.resources.clone() +
+      stars.systems.values()
+        .filter(|s| match s.owner {
+            Some(o) => self.num == o,
+            None => false
+          })
+        .filter_map(|s| s.building.as_ref().map(|b| b.production.clone()))
+        .fold(Resources::new(), |r, p| r + p );
+  }
 }
 
 #[derive(Eq, PartialEq, Hash)]
@@ -140,7 +178,7 @@ struct SolarSystemId(pub u32);
 
 struct SolarSystem<'a> {
     building: Option<Building>,
-    owner: Option<&'a Player>,
+    owner: Option<u32>,
     fleet: Option<Fleet<'a>>,
     location: (u32, u32)
 }
@@ -190,6 +228,21 @@ impl<'a> Starmap<'a> {
     }
 }
 
+fn test_gathering_resources() {
+  let mut player = Player{ num: 1, resources: Resources::new() };
+  let mut universe = Starmap::generate_universe();
+  
+  player.gather_resources(&universe);
+  assert!(player.resources==Resources::new());
+  
+  universe.systems[SolarSystemId(0)].building=Some(Building::new(BuildingClass::Farm));
+  universe.systems[SolarSystemId(0)].owner=Some(1);
+  universe.systems[SolarSystemId(1)].building=Some(Building::new(BuildingClass::Farm));
+  universe.systems[SolarSystemId(1)].owner=Some(2);
+  player.gather_resources(&universe);
+  assert!(player.resources==Resources { gold: 0, food: 5, technology: 0});
+}
+
 fn main() {
   // Buildings
   let farm = Building::new(BuildingClass::Farm);
@@ -199,7 +252,7 @@ fn main() {
   println!("{:?}", lab);
   println!("{:?}", mine);
 
-  let player = Player{ num: 1 };
+  let player = Player{ num: 1, resources: Resources::new() };
 
   // Fleets
   let mut fleet1 = Fleet::new(&player);
@@ -214,6 +267,8 @@ fn main() {
   fleet1.merge(Box::new(fleet2));
   let mut fleet3 = Fleet::new(&player);
   assert!(fleet1.move_to(&mut fleet3, 3, ShipClass::Fighter).is_ok());
+  
+  test_gathering_resources();
   
   graphics::example()
 }
