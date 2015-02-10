@@ -6,7 +6,7 @@ use std::ops::Add;
 
 mod graphics;
 
-#[derive(Clone, Show, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Resources {
     food: i32,
     technology: i32,
@@ -30,14 +30,14 @@ impl Resources {
     }
 }
 
-#[derive(Show)]
+#[derive(Debug)]
 enum BuildingClass {
     Farm,
     Laboratory,
     GoldMine
 }
 
-#[derive(Show)]
+#[derive(Debug)]
 struct Building {
     class: BuildingClass,
     production: Resources
@@ -58,14 +58,13 @@ impl Building {
     }
 }
 
-#[derive(Show, Hash, Eq, PartialEq, Copy)]
+#[derive(Hash, Eq, PartialEq, Copy)]
 enum ShipClass {
     Colony,
     Scout,
     Fighter
 }
 
-#[derive(Show)]
 struct Ship {
     class: ShipClass,
     health: u32,
@@ -83,7 +82,6 @@ impl Ship {
     }
 }
 
-#[derive(Show)]
 enum FleetLocation {
     Moving, // from -> to, turns/needed_turns
     Somewhere // exact location
@@ -170,7 +168,7 @@ impl Player {
         let id = self.id;
         let owned_systems = stars.systems.values().filter(|s| s.owner == Some(id));
         let owned_buildings = owned_systems.filter_map(|s| s.building.as_ref());
-        let owned_production = owned_buildings.map(|b| b.production.clone());
+        let owned_production = owned_buildings.map(|b| b.produce());
         self.resources = owned_production.fold(self.resources.clone(), |r, p| r + p );
     }
 }
