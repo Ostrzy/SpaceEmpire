@@ -1,3 +1,5 @@
+#![feature(core)]
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::ops::Add;
@@ -192,6 +194,22 @@ impl<'a> SolarSystem<'a> {
     fn new() -> SolarSystem<'a> {
         SolarSystem { building: None, owner: None, fleet: None, location: (0, 0) }
     }
+
+    fn set_homeworld(&mut self, player: PlayerId) {
+        self.owner = Some(player);
+        self.build(BuildingClass::GoldMine);
+    }
+
+    fn build(&mut self, class: BuildingClass) {
+        let building = Building::new(class);
+        self.building = Some(building);
+    }
+
+    fn clear(&mut self) {
+        self.building = None;
+        self.owner = None;
+        self.fleet = None;
+    }
 }
 
 impl<'a> Starmap<'a> {
@@ -226,6 +244,15 @@ impl<'a> Starmap<'a> {
 
         starmap
     }
+
+    fn set_homeworlds(&mut self, players: &[PlayerId]) -> Result<(), &'static str> {
+        if players.len() != 2 {
+            return Err("Only two players are possible now!");
+        }
+        self.systems.get_mut(&SolarSystemId(0)).unwrap().set_homeworld(players[0]);
+        self.systems.get_mut(&SolarSystemId(8)).unwrap().set_homeworld(players[1]);
+        Ok(())
+    }
 }
 
 fn test_gathering_resources() {
@@ -233,14 +260,12 @@ fn test_gathering_resources() {
     let mut universe = Starmap::generate_universe();
 
     player.gather_resources(&universe);
-    assert!(player.resources==Resources::new());
+    assert!(player.resources == Resources::new());
 
-    universe.systems[SolarSystemId(0)].building=Some(Building::new(BuildingClass::Farm));
-    universe.systems[SolarSystemId(0)].owner=Some(PlayerId(1));
-    universe.systems[SolarSystemId(1)].building=Some(Building::new(BuildingClass::Farm));
-    universe.systems[SolarSystemId(1)].owner=Some(PlayerId(2));
+    assert!(universe.set_homeworlds(&[PlayerId(1), PlayerId(2)]).is_ok());
+
     player.gather_resources(&universe);
-    assert!(player.resources==Resources { gold: 0, food: 5, technology: 0});
+    assert!(player.resources == Resources { gold: 8, food: 0, technology: 0 });
 }
 
 fn main() {
