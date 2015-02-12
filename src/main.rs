@@ -266,17 +266,8 @@ fn test_gathering_resources() {
     assert!(player.resources == Resources { gold: 8, food: 0, technology: 0 });
 }
 
-fn main() {
-    // Buildings
-    let farm = Building::new(BuildingClass::Farm);
-    let lab  = Building::new(BuildingClass::Laboratory);
-    let mine = Building::new(BuildingClass::GoldMine);
-    println!("{:?}", farm);
-    println!("{:?}", lab);
-    println!("{:?}", mine);
-
+fn test_fleet_movement() {
     let player = Player{ id: PlayerId(1), resources: Resources::new() };
-
     // Fleets
     let mut fleet1 = Fleet::new(&player);
     let mut fleet2 = Fleet::new(&player);
@@ -290,7 +281,21 @@ fn main() {
     fleet1.merge(Box::new(fleet2));
     let mut fleet3 = Fleet::new(&player);
     assert!(fleet1.move_to(&mut fleet3, 3, ShipClass::Fighter).is_ok());
+}
 
+fn print_some_buildings_really_important_piece_of_code() {
+    // Buildings
+    let farm = Building::new(BuildingClass::Farm);
+    let lab  = Building::new(BuildingClass::Laboratory);
+    let mine = Building::new(BuildingClass::GoldMine);
+    println!("{:?}", farm);
+    println!("{:?}", lab);
+    println!("{:?}", mine);
+}
+
+fn main() {
+    print_some_buildings_really_important_piece_of_code();
+    test_fleet_movement();
     test_gathering_resources();
 
     graphics::example()
