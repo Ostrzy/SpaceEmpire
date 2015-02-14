@@ -3,7 +3,7 @@ extern crate sdl2;
 use Player;
 use Starmap;
 use graphics::Game;
-use self::sdl2::render::Renderer;
+use self::sdl2::render::RenderDrawer;
 use self::sdl2::rect::Rect;
 use self::sdl2::pixels::Color;
 
@@ -20,13 +20,9 @@ impl Game for SpaceEmpire {
         }
     }
 
-    fn display(&self, renderer: &Renderer) {
-        let mut drawer = renderer.drawer();
-        drawer.set_draw_color(Color::RGB(0, 0, 0));
-        drawer.clear();
+    fn display(&self, drawer: &mut RenderDrawer) {
         drawer.set_draw_color(Color::RGB(255, 0, 0));
         drawer.draw_rect(&Rect::new(50, 50, 150, 175));
-        drawer.present();
     }
 }
 
