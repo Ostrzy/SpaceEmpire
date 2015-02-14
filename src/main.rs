@@ -1,8 +1,14 @@
 #![feature(core)]
 
+extern crate sdl2;
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::ops::Add;
+use std::num::ToPrimitive;
+use self::sdl2::render::RenderDrawer;
+use self::sdl2::rect::Rect;
+use self::sdl2::pixels::Color;
 
 mod graphics;
 mod game;
@@ -221,6 +227,14 @@ impl SolarSystem {
         self.owner = None;
         self.fleet = None;
     }
+
+    fn display(&self, drawer: &mut RenderDrawer) {
+        drawer.set_draw_color(Color::RGB(0, 0, 255));
+        let (x,y) = self.location;
+        let display_x = x.to_i32().unwrap()*80;
+        let display_y = y.to_i32().unwrap()*80;
+        drawer.draw_rect(&Rect::new(display_x, display_y, 50, 50));
+    }
 }
 
 impl Starmap {
@@ -263,6 +277,12 @@ impl Starmap {
         self.systems.get_mut(&SolarSystemId(0)).unwrap().set_homeworld(players[0]);
         self.systems.get_mut(&SolarSystemId(8)).unwrap().set_homeworld(players[1]);
         Ok(())
+    }
+
+    fn display(&self, drawer: &mut RenderDrawer) {
+        for system in self.systems.values() {
+            system.display(drawer);
+        }
     }
 }
 
