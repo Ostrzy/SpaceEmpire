@@ -5,6 +5,9 @@ use std::collections::HashSet;
 use std::ops::Add;
 
 mod graphics;
+mod game;
+
+use game::SpaceEmpire;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Resources {
@@ -87,15 +90,14 @@ enum FleetLocation {
     Somewhere // exact location
 }
 
-struct Fleet<'a> {
-    owner: &'a Player,
+struct Fleet {
     ships: HashMap<ShipClass, Vec<Ship>>,
     location: FleetLocation,
 }
 
-impl<'a> Fleet<'a> {
-    fn new(player: &'a Player) -> Fleet {
-        Fleet { owner: player, ships: HashMap::new(), location: FleetLocation::Somewhere }
+impl Fleet{
+    fn new() -> Fleet {
+        Fleet { ships: HashMap::new(), location: FleetLocation::Somewhere }
     }
 
     fn add(&mut self, ship: Ship) {
@@ -106,7 +108,7 @@ impl<'a> Fleet<'a> {
         self.ships.get_mut(&ship.class).unwrap().push(ship);
     }
 
-    fn merge<'b>(&mut self, fleet: Box<Fleet<'b>>) {
+    fn merge(&mut self, fleet: Box<Fleet>) {
         for (ship_class, ships) in fleet.ships.into_iter() {
             for ship in ships.into_iter() {
                 self.add(ship);
@@ -176,20 +178,20 @@ impl Player {
 #[derive(Eq, PartialEq, Hash, Copy)]
 struct SolarSystemId(pub u32);
 
-struct SolarSystem<'a> {
+struct SolarSystem {
     building: Option<Building>,
     owner: Option<PlayerId>,
-    fleet: Option<Fleet<'a>>,
+    fleet: Option<Fleet>,
     location: (u32, u32)
 }
 
-struct Starmap<'a> {
-    systems: HashMap<SolarSystemId, SolarSystem<'a>>,
+pub struct Starmap {
+    systems: HashMap<SolarSystemId, SolarSystem>,
     neighbours: HashSet<(SolarSystemId, SolarSystemId)>
 }
 
-impl<'a> SolarSystem<'a> {
-    fn new() -> SolarSystem<'a> {
+impl SolarSystem {
+    fn new() -> SolarSystem {
         SolarSystem { building: None, owner: None, fleet: None, location: (0, 0) }
     }
 
@@ -210,12 +212,12 @@ impl<'a> SolarSystem<'a> {
     }
 }
 
-impl<'a> Starmap<'a> {
-    fn new() -> Starmap<'a> {
+impl Starmap {
+    fn new() -> Starmap {
         Starmap { systems: HashMap::new(), neighbours: HashSet::new() }
     }
 
-    fn generate_universe() -> Starmap<'a> {
+    fn generate_universe() -> Starmap {
         // 0 - 1 - 2
         // |     / |
         // 3   4   5
@@ -269,8 +271,8 @@ fn test_gathering_resources() {
 fn test_fleet_movement() {
     let player = Player{ id: PlayerId(1), resources: Resources::new() };
     // Fleets
-    let mut fleet1 = Fleet::new(&player);
-    let mut fleet2 = Fleet::new(&player);
+    let mut fleet1 = Fleet::new();
+    let mut fleet2 = Fleet::new();
     fleet1.add(Ship::new(ShipClass::Fighter));
     fleet1.add(Ship::new(ShipClass::Fighter));
     fleet1.add(Ship::new(ShipClass::Scout));
@@ -279,7 +281,7 @@ fn test_fleet_movement() {
     fleet2.add(Ship::new(ShipClass::Colony));
 
     fleet1.merge(Box::new(fleet2));
-    let mut fleet3 = Fleet::new(&player);
+    let mut fleet3 = Fleet::new();
     assert!(fleet1.move_to(&mut fleet3, 3, ShipClass::Fighter).is_ok());
 }
 
@@ -298,5 +300,7 @@ fn main() {
     test_fleet_movement();
     test_gathering_resources();
 
-    graphics::example()
+    let mut universe = Starmap::generate_universe();
+
+    graphics::example(Box::new(SpaceEmpire::new()));
 }

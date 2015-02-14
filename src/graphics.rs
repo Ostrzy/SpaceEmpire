@@ -7,7 +7,11 @@ use self::sdl2::event::poll_event;
 use self::sdl2::event::Event::{Quit, KeyDown};
 use self::sdl2::keycode::KeyCode;
 
-pub fn example() {
+pub trait Game {
+    fn step(&mut self) -> ();
+}
+
+pub fn example(mut game : Box<Game>) {
     sdl2::init(sdl2::INIT_VIDEO);
 
     let window = match Window::new("rust-sdl2 demo: Video", WindowPos::PosCentered, WindowPos::PosCentered, 800, 600, OPENGL) {
@@ -31,11 +35,12 @@ pub fn example() {
             KeyDown (_, _, key, _, _, _) => {
                 if key == KeyCode::Escape {
                     break;
+                } else if key == KeyCode::Space {
+                    game.step();
                 }
             }
             _ => {} 
         }
     }
-
     sdl2::quit();
 }
