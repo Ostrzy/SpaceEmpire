@@ -202,11 +202,6 @@ struct SolarSystem {
     location: (u32, u32)
 }
 
-pub struct Starmap {
-    systems: HashMap<SolarSystemId, SolarSystem>,
-    neighbours: HashSet<(SolarSystemId, SolarSystemId)>
-}
-
 impl SolarSystem {
     fn new() -> SolarSystem {
         SolarSystem { building: None, owner: None, fleet: None, location: (0, 0) }
@@ -235,6 +230,11 @@ impl SolarSystem {
         let display_y = y.to_i32().unwrap()*80;
         drawer.draw_rect(&Rect::new(display_x, display_y, 50, 50));
     }
+}
+
+pub struct Starmap {
+    systems: HashMap<SolarSystemId, SolarSystem>,
+    neighbours: HashSet<(SolarSystemId, SolarSystemId)>
 }
 
 impl Starmap {
