@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use Player;
 use Starmap;
-use PlayerId;
-use Resources;
 use graphics::Game;
 use self::sdl2::render::Renderer;
 use self::sdl2::rect::Rect;

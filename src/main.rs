@@ -280,7 +280,6 @@ fn test_gathering_resources() {
 }
 
 fn test_fleet_movement() {
-    let player = Player{ id: PlayerId(1), resources: Resources::new() };
     // Fleets
     let mut fleet1 = Fleet::new();
     let mut fleet2 = Fleet::new();
@@ -310,8 +309,6 @@ fn main() {
     print_some_buildings_really_important_piece_of_code();
     test_fleet_movement();
     test_gathering_resources();
-
-    let mut universe = Starmap::generate_universe();
 
     graphics::example(Box::new(SpaceEmpire::new()));
 }
