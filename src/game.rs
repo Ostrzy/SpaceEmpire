@@ -6,7 +6,7 @@ use graphics::Game;
 
 pub struct SpaceEmpire {
     starmap: Starmap,
-    players: [Player; 1]
+    players: Vec<Player>
 }
 
 impl Game for SpaceEmpire {
@@ -20,6 +20,9 @@ impl Game for SpaceEmpire {
 
 impl SpaceEmpire {
     pub fn new() -> SpaceEmpire{
-        SpaceEmpire{starmap: Starmap::new(), players: [Player{ id: PlayerId(1), resources: Resources::new() }]}
+        SpaceEmpire {
+            starmap: Starmap::generate_universe(),
+            players: Player::create_players(2)
+        }
     }
 }

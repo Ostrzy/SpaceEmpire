@@ -166,12 +166,23 @@ impl PartialEq for Player {
 }
 
 impl Player {
+    fn new(id: u32) -> Player {
+        Player {
+            id: PlayerId(id),
+            resources: Resources::new()
+        }
+    }
+
     fn gather_resources(&mut self, stars: &Starmap) -> () {
         let id = self.id;
         let owned_systems = stars.systems.values().filter(|s| s.owner == Some(id));
         let owned_buildings = owned_systems.filter_map(|s| s.building.as_ref());
         let owned_production = owned_buildings.map(|b| b.produce());
         self.resources = owned_production.fold(self.resources.clone(), |r, p| r + p );
+    }
+
+    fn create_players(num : u32) -> Vec<Player> {
+        (0..num).map(|i| Player::new(i)).collect()
     }
 }
 
