@@ -10,7 +10,7 @@ use std::collections::HashSet;
 use std::ops::Add;
 use std::num::ToPrimitive;
 use self::sdl2::render::RenderDrawer;
-use self::sdl2::rect::Rect;
+use self::sdl2::rect::{Rect, Point};
 use self::sdl2::pixels::Color;
 
 mod graphics;
@@ -203,7 +203,7 @@ struct SolarSystem {
     building: Option<Building>,
     owner: Option<PlayerId>,
     fleet: Option<Fleet>,
-    location: (u32, u32)
+    location: (i32, i32)
 }
 
 impl <H: Hasher + Writer> Hash<H> for SolarSystem {
@@ -240,6 +240,16 @@ impl SolarSystem {
         let display_y = y.to_i32().unwrap()*80;
         drawer.draw_rect(&Rect::new(display_x, display_y, 50, 50));
     }
+
+    fn display_location(&self) -> (i32, i32) {
+        let (x,y) = self.location;
+        (x*80, y*80)
+    }
+
+    fn center(&self) -> (i32, i32) {
+        let (x,y) = self.display_location();
+        (x+25, y+25)
+    }
 }
 
 pub struct Starmap {
@@ -259,16 +269,17 @@ impl Starmap {
         // | /     |
         // 6 - 7 - 8
         let neighbours = [
-            (1,3), (0,2), (1,5),
-            (0,6), (2,6), (2,8),
-            (3,7), (6,8), (7,5)
+            (0,1), (1,2), (2,5),
+            (5,8), (7,8), (6,7),
+            (3,6), (0,3), (4,6),
+            (2,4)
         ];
 
         let mut starmap = Starmap::new();
 
         for n in 0..9 {
             let system = Rc::new(RefCell::new(SolarSystem::new(SolarSystemId(n))));
-            system.borrow_mut().location = (n % 3, n / 3);
+            system.borrow_mut().location = ((n % 3).to_i32().unwrap(), (n / 3).to_i32().unwrap());
             starmap.systems.insert(SolarSystemId(n), system);
         }
 
@@ -293,6 +304,9 @@ impl Starmap {
     fn display(&self, drawer: &mut RenderDrawer) {
         for system in self.systems.values() {
             system.borrow().display(drawer);
+        }
+        for connection in self.neighbours.iter() {
+            connection.display(drawer);
         }
     }
 }
@@ -321,6 +335,14 @@ impl Eq for SystemsConnection {}
 impl SystemsConnection {
     fn new(system_a: Rc<RefCell<SolarSystem>>, system_b: Rc<RefCell<SolarSystem>>) -> SystemsConnection {
         SystemsConnection{first: system_a, second: system_b}
+    }
+
+    fn display(&self, drawer: &mut RenderDrawer) {
+        let (x1, y1) = self.first.borrow().center();
+        let (x2, y2) = self.second.borrow().center();
+        drawer.draw_line(
+            Point{x: x1, y: y1},
+            Point{x: x2, y: y2});
     }
 }
 
