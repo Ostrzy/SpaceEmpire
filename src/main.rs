@@ -2,6 +2,9 @@
 
 extern crate sdl2;
 
+use std::rc::Rc;
+use std::hash::{Hash, Hasher, Writer};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::ops::Add;
@@ -39,14 +42,14 @@ impl Resources {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum BuildingClass {
     Farm,
     Laboratory,
     GoldMine
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Building {
     class: BuildingClass,
     production: Resources
@@ -181,8 +184,8 @@ impl Player {
 
     fn gather_resources(&mut self, stars: &Starmap) -> () {
         let id = self.id;
-        let owned_systems = stars.systems.values().filter(|s| s.owner == Some(id));
-        let owned_buildings = owned_systems.filter_map(|s| s.building.as_ref());
+        let owned_systems = stars.systems.values().filter(|s| s.borrow().owner == Some(id));
+        let owned_buildings = owned_systems.filter_map(|s| s.borrow().building.clone());
         let owned_production = owned_buildings.map(|b| b.produce());
         self.resources = owned_production.fold(self.resources.clone(), |r, p| r + p );
     }
@@ -196,15 +199,22 @@ impl Player {
 struct SolarSystemId(pub u32);
 
 struct SolarSystem {
+    id: SolarSystemId,
     building: Option<Building>,
     owner: Option<PlayerId>,
     fleet: Option<Fleet>,
     location: (u32, u32)
 }
 
+impl <H: Hasher + Writer> Hash<H> for SolarSystem {
+    fn hash(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
 impl SolarSystem {
-    fn new() -> SolarSystem {
-        SolarSystem { building: None, owner: None, fleet: None, location: (0, 0) }
+    fn new(id: SolarSystemId) -> SolarSystem {
+        SolarSystem { id: id, building: None, owner: None, fleet: None, location: (0, 0) }
     }
 
     fn set_homeworld(&mut self, player: PlayerId) {
@@ -233,8 +243,8 @@ impl SolarSystem {
 }
 
 pub struct Starmap {
-    systems: HashMap<SolarSystemId, SolarSystem>,
-    neighbours: HashSet<(SolarSystemId, SolarSystemId)>
+    systems: HashMap<SolarSystemId, Rc<RefCell<SolarSystem>>>,
+    neighbours: HashSet<SystemsConnection>
 }
 
 impl Starmap {
@@ -257,14 +267,15 @@ impl Starmap {
         let mut starmap = Starmap::new();
 
         for n in 0..9 {
-            let mut system = SolarSystem::new();
-            system.location = (n % 3, n / 3);
+            let system = Rc::new(RefCell::new(SolarSystem::new(SolarSystemId(n))));
+            system.borrow_mut().location = (n % 3, n / 3);
             starmap.systems.insert(SolarSystemId(n), system);
         }
 
         for neighbour in neighbours.iter() {
-            starmap.neighbours.insert((SolarSystemId(neighbour.0), SolarSystemId(neighbour.1)));
-            starmap.neighbours.insert((SolarSystemId(neighbour.1), SolarSystemId(neighbour.0)));
+            let system_a = starmap.systems[SolarSystemId(neighbour.0)].clone();
+            let system_b = starmap.systems[SolarSystemId(neighbour.1)].clone();
+            starmap.neighbours.insert(SystemsConnection::new(system_a, system_b));
         }
 
         starmap
@@ -274,15 +285,42 @@ impl Starmap {
         if players.len() != 2 {
             return Err("Only two players are possible now!");
         }
-        self.systems.get_mut(&SolarSystemId(0)).unwrap().set_homeworld(players[0]);
-        self.systems.get_mut(&SolarSystemId(8)).unwrap().set_homeworld(players[1]);
+        self.systems.get_mut(&SolarSystemId(0)).unwrap().borrow_mut().set_homeworld(players[0]);
+        self.systems.get_mut(&SolarSystemId(8)).unwrap().borrow_mut().set_homeworld(players[1]);
         Ok(())
     }
 
     fn display(&self, drawer: &mut RenderDrawer) {
         for system in self.systems.values() {
-            system.display(drawer);
+            system.borrow().display(drawer);
         }
+    }
+}
+
+struct SystemsConnection {
+    first: Rc<RefCell<SolarSystem>>,
+    second: Rc<RefCell<SolarSystem>>
+}
+
+impl <H: Hasher + Writer> Hash<H> for SystemsConnection {
+    fn hash(&self, state: &mut H) {
+        self.first.borrow().hash(state);
+        self.second.borrow().hash(state);
+    }
+}
+
+impl PartialEq for SystemsConnection {
+    fn eq(&self, other : &SystemsConnection) -> bool {
+        self.first.borrow().id == other.first.borrow().id &&
+        self.second.borrow().id == other.second.borrow().id
+    }
+}
+
+impl Eq for SystemsConnection {}
+
+impl SystemsConnection {
+    fn new(system_a: Rc<RefCell<SolarSystem>>, system_b: Rc<RefCell<SolarSystem>>) -> SystemsConnection {
+        SystemsConnection{first: system_a, second: system_b}
     }
 }
 
