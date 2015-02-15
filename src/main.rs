@@ -195,7 +195,7 @@ impl Player {
     }
 }
 
-#[derive(Eq, PartialEq, Hash, Copy)]
+#[derive(Eq, PartialEq, Hash, Copy, PartialOrd, Ord)]
 struct SolarSystemId(pub u32);
 
 struct SolarSystem {
@@ -336,7 +336,11 @@ impl Eq for SystemsConnection {}
 
 impl SystemsConnection {
     fn new(system_a: SolarSystemCell, system_b: SolarSystemCell) -> SystemsConnection {
-        SystemsConnection{first: system_a, second: system_b}
+        if system_a.borrow().id < system_b.borrow().id {
+            SystemsConnection{first: system_a, second: system_b}
+        } else {
+            SystemsConnection{first: system_b, second: system_a}
+        }
     }
 
     fn display(&self, drawer: &mut RenderDrawer) {
