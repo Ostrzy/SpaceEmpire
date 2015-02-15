@@ -252,8 +252,10 @@ impl SolarSystem {
     }
 }
 
+type SolarSystemCell = Rc<RefCell<SolarSystem>>;
+
 pub struct Starmap {
-    systems: HashMap<SolarSystemId, Rc<RefCell<SolarSystem>>>,
+    systems: HashMap<SolarSystemId, SolarSystemCell>,
     neighbours: HashSet<SystemsConnection>
 }
 
@@ -312,8 +314,8 @@ impl Starmap {
 }
 
 struct SystemsConnection {
-    first: Rc<RefCell<SolarSystem>>,
-    second: Rc<RefCell<SolarSystem>>
+    first: SolarSystemCell,
+    second: SolarSystemCell
 }
 
 impl <H: Hasher + Writer> Hash<H> for SystemsConnection {
@@ -333,7 +335,7 @@ impl PartialEq for SystemsConnection {
 impl Eq for SystemsConnection {}
 
 impl SystemsConnection {
-    fn new(system_a: Rc<RefCell<SolarSystem>>, system_b: Rc<RefCell<SolarSystem>>) -> SystemsConnection {
+    fn new(system_a: SolarSystemCell, system_b: SolarSystemCell) -> SystemsConnection {
         SystemsConnection{first: system_a, second: system_b}
     }
 
